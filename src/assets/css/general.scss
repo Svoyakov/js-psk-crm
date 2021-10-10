@@ -1,0 +1,23 @@
+.component-root {
+    min-width: $min-width-body;
+    max-width: $max-width-body;
+    padding: 80px 20px;
+    box-sizing: border-box;
+    height: calc(100% - 160px);
+}
+
+.top {
+    padding: 20px;
+  
+    &__item {
+      display: inline-block;
+      margin-right: 35px;
+    }
+  
+    h1 {
+      font-family: $font-bold;
+      font-size: 25px;
+      line-height: 29px;
+      color: $font-color;
+    }
+}

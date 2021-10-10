@@ -1,0 +1,44 @@
+html {
+    min-height: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+body {
+    padding: 0;
+    margin: 0;
+    background: #F5F5F5;
+    box-sizing: border-box;
+    min-height: 100%;
+    height: 100%;
+}
+body * {
+    box-sizing: border-box;
+}
+body p {
+    padding: 0;
+    margin: 0;
+    font-size: 13px;
+    line-height: 15px;
+    font-weight: normal;
+    color: #333333;
+}
+#app {
+    min-height: 100%;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-weight: normal;
+    font-family: "roboto-bold";
+    padding: 10px 0;
+    margin: 0;
+    color: #333333;
+}
+
+h3 {
+    font-size: 15px;
+    line-height: 18px;
+}
