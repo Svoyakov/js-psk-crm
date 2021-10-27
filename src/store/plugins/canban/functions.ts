@@ -1,4 +1,4 @@
-import { cloneObj } from '@/utils'
+import { cloneObj, getNowSecods } from '@/utils'
 import { tables, jsonParseKeys } from '@/conf/tables'
 
 interface Iobject {
@@ -13,7 +13,7 @@ export function getHistoryReqToTable(args: Iobject): Iobject {
     items: [
       {
         name: 'datetime',
-        value: Math.round(new Date().getTime() / 1000),
+        value: getNowSecods(),
       },
       { name: 'text', value: text },
       { name: 'dealId', value: dealId },
@@ -50,7 +50,7 @@ export function changeCabnanArrayPosition(args: Iobject): Iobject {
 
   const getCanbanOrderedData: Iobject = cloneObj(sortedCanban)
     .map((item: Iobject) => item.id)
-  const datetime = Math.round(new Date().getTime() / 1000)
+  const datetime = getNowSecods()
 
   if (position === 'down') indexTo += 1
   getCanbanOrderedData.splice(indexTo, 0, from)
@@ -84,8 +84,12 @@ export function changeCabnanArrayPosition(args: Iobject): Iobject {
   const changeSend: Iobject = {
     datetime,
     callbacks: [
-      { table: tables.canbanData, nameId: 'id', id: from },
-      { table: tables.canbanOrder, nameId: 'catId', id: sortedCanban[0].catId },
+      {
+        table: tables.canbanData, nameId: 'id', id: from, compare: '=', 
+      },
+      {
+        table: tables.canbanOrder, nameId: 'catId', id: sortedCanban[0].catId, compare: '=', 
+      },
     ],
     actions: [
       {

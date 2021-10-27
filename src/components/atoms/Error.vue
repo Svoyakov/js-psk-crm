@@ -2,9 +2,9 @@
   <div class="error">
 
     <div class="top">
-        <span class="top__item">
-        <h1>Такой страницы не существует</h1>
-        </span>
+        <div class="top__item">
+          <h1>Такой страницы не существует</h1>
+        </div>
     </div>
 
   </div>

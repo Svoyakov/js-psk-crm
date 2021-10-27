@@ -1,31 +1,22 @@
 import Vue from 'vue'
-import Vuex from 'vuex'
 import VueRouter from 'vue-router'
+import VueTheMask from 'vue-the-mask'
 
+import store from '@/store'
 import App from '@/App.vue'
-import storeSettings from './store/index'
 import routes from './routes/index'
+
+Vue.use(VueRouter)
+Vue.use(VueTheMask)
 
 const NODE_ENV = 'development';
 
 (function cons(ENV) {
-  const logArr: string[] = ['log', 'warn', 'error']
+  const logArr: string[] = ['log']
   logArr.forEach((type: string) => {
     if (type === 'log') {
       const l = console.log
       console.log = (...args: string[]) => {
-        if (ENV === 'development') l.apply(console, args)
-      }
-    }
-    if (type === 'warn') {
-      const l = console.warn
-      console.warn = (...args: string[]) => {
-        if (ENV === 'development') l.apply(console, args)
-      }
-    }
-    if (type === 'error') {
-      const l = console.error
-      console.error = (...args: string[]) => {
         if (ENV === 'development') l.apply(console, args)
       }
     }
@@ -41,11 +32,7 @@ const router = new VueRouter({
 
 declare const window: Window & typeof globalThis & {vm: any}
 
-Vue.use(Vuex)
-Vue.use(VueRouter)
 Vue.config.productionTip = false
-
-const store: any = new Vuex.Store(storeSettings())
 
 window.vm = new Vue({
   store,
@@ -61,12 +48,19 @@ store.dispatch('app/setUser', {
   data: {
     datetime: 1632664341,
     data: {
-      id: 12,
-      firstName: 'Алексей',
-      middleName: 'Викторович',
-      lastName: 'Алексеев',
+      id: 1,
+      firstName: 'Иван',
+      middleName: 'Иванович',
+      lastName: 'Иванов',
       status: 0,
       active: 1,
     },
+  },
+})
+
+store.dispatch('app/setDatetimeCorrect', {
+  data: {
+    datetime: 1632664341,
+    data: 0,
   },
 })

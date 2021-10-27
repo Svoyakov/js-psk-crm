@@ -4,10 +4,10 @@
         <Header />
 
         <div class="top">
-          <span class="top__item">
+          <div class="top__item">
             <h1>Авторизация</h1>
             <p>в разработке</p>
-          </span>
+          </div>
         </div>
 
         <Footer />

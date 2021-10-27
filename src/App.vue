@@ -2,14 +2,15 @@
   <div id="app">
     <router-view></router-view>
     <Load />
+    <PopupDialog />
   </div>
 </template>
 
 <script lang="ts">
-import { mapGetters } from 'vuex'
 import routes from '@/routes/index'
 import m from '@/mixins/m'
 import Load from '@/components/Load.vue'
+import PopupDialog from '@/components/pages/PopupDialog.vue'
 
 interface Iobject {
   [key: string]: any
@@ -33,6 +34,7 @@ export default {
   mixins: [m],
   components: {
     Load,
+    PopupDialog,
   },
   watch: {
     $route(to: Iobject, from: Iobject): void {
@@ -54,10 +56,7 @@ export default {
     },
   },
   computed: {
-    ...mapGetters('app', [
-      'getState',
-      'getRouteData',
-    ]),
+
   },
   methods: {
 

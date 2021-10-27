@@ -42,3 +42,8 @@ h3 {
     font-size: 15px;
     line-height: 18px;
 }
+
+body .no-data {
+    font-family: "roboto-italic";
+    color: #999;
+}

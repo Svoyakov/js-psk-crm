@@ -7,7 +7,7 @@ class CrmApi {
 
     #timeout: null | number = null
 
-    #url = 'http://api.psktitan.ru'
+    #url = 'https://api.psktitan.ru'
 
     private static instance: CrmApi
 

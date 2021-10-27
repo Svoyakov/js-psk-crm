@@ -70,7 +70,7 @@ export default {
 }
 
 .loader[data-stage] {
-  background: rgba(255,255,255,0.5);
+  background: $white-opacity;
 }
 .lds-roller {
   display: none;

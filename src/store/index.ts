@@ -1,11 +1,11 @@
+import Vue from 'vue'
+import Vuex from 'vuex'
 import appModule from './modules/app/index'
 import appController from './controllers/app/index'
 
-interface Iobject {
-  [key: string]: any
-}
+Vue.use(Vuex)
 
-export default (): Iobject => ({
+const store = new Vuex.Store({
   strict: true,
   modules: {
     app: appModule,
@@ -14,3 +14,5 @@ export default (): Iobject => ({
     appController(),
   ],
 })
+
+export default store

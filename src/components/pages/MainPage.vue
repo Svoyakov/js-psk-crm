@@ -23,7 +23,54 @@ export default {
     Footer,
   },
   data(): Iobject {
-    return {}
+    return {
+      enabledDrag: { status: true },
+      addDragItems: [
+        'contacts',
+        'phones',
+        'emails',
+        'company.contacts',
+        'deal.additions.windows',
+        'deal.additions.doors',
+        'deal.additions.gates',
+        'deal.additions.cranes',
+      ],
+      contacts: [
+        {
+          name: 'Джери',
+          ord: 0,
+          info: '',
+          phones: [],
+          emails: [],
+        },
+        {
+          name: 'Иван',
+          ord: 1,
+          info: '',
+          phones: [
+            { phone: '+79998887766', info: '', ord: 0 },
+          ],
+          emails: [],
+        },
+        {
+          name: 'Сергей',
+          ord: 2,
+          info: '',
+          phones: [
+            { phone: '+79994443322', info: '', ord: 0 },
+            { phone: '+79993332211', info: '', ord: 1 },
+          ],
+          emails: [],
+        },
+        {
+          name: 'Антон',
+          ord: 2,
+          info: '',
+          phones: [],
+          emails: [],
+        },
+      ],
+    }
   },
   computed: {
 

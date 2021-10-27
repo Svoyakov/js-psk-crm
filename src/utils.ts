@@ -1,5 +1,11 @@
+import store from '@/store'
+
 interface Iobject {
     [key: string]: any
+}
+
+export function getNowSecods(): number {
+  return Math.round(new Date().getTime() / 1000) + (store.getters['app/getDatetimeCorrect']?.data || 0)
 }
 
 export function cloneObj(arr: Iobject): Iobject {

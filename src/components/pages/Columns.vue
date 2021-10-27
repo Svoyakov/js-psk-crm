@@ -1,10 +1,10 @@
 <template>
   <div>
     <div class="top">
-      <span class="top__item">
+      <div class="top__item">
         <h1>Активные сделки в работе</h1>
         <p v-show="error === true">При загрузке произошла ошибка</p>
-      </span>
+      </div>
     </div>
 
     <div class="columns"
@@ -41,7 +41,7 @@
                   </div>
                   <div v-if="i === 0" class="item-header__add-body">
                     <div class="item-header__add-body-item"
-                      @click="routeGo({ name: 'add-deal' })"
+                      @click="routeGo({ name: 'addDeal' })"
                     >
                       Добавить сделку
                     </div>
@@ -64,7 +64,7 @@
                             <h3>
                                 <span class="deal__contact-id">#{{ item.id }}</span>,
                                 <span class="deal__contact-name"
-                                  v-html="noData(item['company.name'], 'Нет названия компании')"
+                                  v-html="noData(item['company.name'], 'нет названия компании')"
                                 ></span>
                                 <span  class="deal__contact-phone" v-if="checkPhone(item)">
                                   / {{ item.contacts[0].phones[0].phone }}
@@ -73,17 +73,17 @@
                         </div>
                         <div class="deal__name-place">
                             <h4>
-                                <span v-html="noData(item['deal.name'], 'Нет названия')"></span>,
+                                <span v-html="noData(item['deal.name'], 'нет названия')"></span>,
                                 <nobr>
-                                  <span v-html="noData(item['deal.size.l'], '{Д}')"></span> x
-                                  <span v-html="noData(item['deal.size.w'], '{Ш}')"></span> х
-                                  <span v-html="noData(item['deal.size.h'], '{В}')"></span>
+                                  <span v-html="noData(item['deal.size.l'], 'Д')"></span> x
+                                  <span v-html="noData(item['deal.size.w'], 'Ш')"></span> х
+                                  <span v-html="noData(item['deal.size.h'], 'В')"></span>
                                 </nobr>
                             </h4>
                             <p>
-                              <span v-html="noData(item['deal.material'], 'Не указан материал')"></span> /
-                              <span v-html="noData(item['deal.city'], 'Не указан город')"></span>,
-                              <span v-html="noData(item['deal.region'], 'Не указан регион')"></span>
+                              <span v-html="noData(item['deal.material'], 'не указан материал')"></span> /
+                              <span v-html="noData(item['deal.city'], 'не указан город')"></span>,
+                              <span v-html="noData(item['deal.region'], 'не указан регион')"></span>
                             </p>
                         </div>
                         <div class="deal__price">
@@ -92,7 +92,7 @@
                         <div class="deal__date-source">
                             <p>
                               <span v-html="getDate(item.datetime)"></span> /
-                              <span v-html="noData(item['deal.source'], 'Не указан источник')"></span>
+                              <span v-html="noData(item['deal.source'], 'не указан источник')"></span>
                             </p>
                         </div>
                     </div>
@@ -107,19 +107,21 @@
 
 <script lang="ts">
 import canbanRouteData from '@/conf/routes/pages/canban'
-import { canbanStages, reloadDatetimeInterval } from '@/conf/canbanData'
-import { dispatchByTable } from '@/conf/tables'
+import { canbanStages, catId } from '@/conf/canbanData'
+import { reloadCanbanInterval } from '@/conf/reloadTimers'
 import {
   getCoords,
   getNoun,
   numberWithSpaces,
   getDate,
   cloneObj,
+  getNowSecods,
 } from '@/utils'
 import {
   changeCabnanArrayPosition,
   getUnFlat,
 } from '@/store/plugins/canban/functions'
+import { dispatchByTable } from '@/conf/tables'
 import CrmApi from '@/services/crmApi'
 import m from '@/mixins/m'
 
@@ -145,7 +147,7 @@ export default {
       dragOverInesrtableColumn: [],
       dragClone: null,
       isChangeItemPosition: null,
-      catId: 1,
+      catId,
       sortedCanban: [],
       canbanByStages: {},
       yScroll: null,
@@ -154,6 +156,7 @@ export default {
     }
   },
   mounted(): void {
+    this.error = null
     const app = document.getElementById('app')
     if (!app) return
     app.addEventListener('mouseleave', this.dragStop)
@@ -186,10 +189,7 @@ export default {
       items.forEach((item: Iobject) => {
         price += item['deal.price']
       })
-      return this.numberWithSpaces(price)
-    },
-    numberWithSpaces(x: number): string {
-      return numberWithSpaces(x)
+      return numberWithSpaces(price)
     },
     getDate(datetime: number): string {
       return getDate(datetime)
@@ -289,6 +289,7 @@ export default {
             user: this.getUser,
             canbanStages,
           })
+          console.log('changes', changes)
           this.completeDrag(changes)
         } catch (error) {
           console.log('Error newGetCanbanData:', error)
@@ -347,46 +348,47 @@ export default {
         if (this.drag[i].status !== 'none') this.drag[i].status = 'none'
       })
     },
-    async completeDrag(change: Iobject): Promise<void> {
-      crmApi.sendAndGetData(change).then((result: Iobject) => {
-        console.log('result', result)
-        result.data.forEach((item: Iobject) => {
-          if (!dispatchByTable[Object.keys(item)[0]]) return
-          const datetime = Math.round(new Date().getTime() / 1000)
-
-          if (dispatchByTable[Object.keys(item)[0]] === 'app/setCanbanData') {
-            const can = cloneObj(this.getCanbanData)
-
-            const unFlat = getUnFlat(item[Object.keys(item)[0]])
-            const canData: Iobject[] = []
-            can.data.forEach((deal: Iobject) => {
-              if (deal.id === unFlat[0].id) {
-                canData.push(unFlat[0])
-              } else {
-                canData.push(deal)
-              }
-            })
-            can.data = canData
-            this.$store.dispatch(dispatchByTable[Object.keys(item)[0]], {
-              data: can,
-            })
-          }
-
-          if (dispatchByTable[Object.keys(item)[0]] === 'app/setCanbanOrder') {
-            const ordrData = item[Object.keys(item)[0]]
-            this.$store.dispatch(dispatchByTable[Object.keys(item)[0]], {
-              data: {
-                datetime,
-                data: JSON.parse(ordrData[0].ord),
-              },
-            })
+    resolveCallback(item: Iobject): void {
+      if (!dispatchByTable[Object.keys(item)[0]]) return
+      if (dispatchByTable[Object.keys(item)[0]] === 'app/setCanbanData') {
+        const can = cloneObj(this.getCanbanData)
+        const unFlat = getUnFlat(item[Object.keys(item)[0]])
+        const canData: Iobject[] = []
+        can.data.forEach((deal: Iobject) => {
+          if (deal.id === unFlat[0].id) {
+            canData.push(unFlat[0])
+          } else {
+            canData.push(deal)
           }
         })
-        this.defaultAfterDrag()
-      }).catch((error: Iobject) => {
-        console.warn('error crmApi.sendAndGetData', error)
-        this.defaultAfterDrag()
-      })
+        can.data = canData
+        this.$store.dispatch(dispatchByTable[Object.keys(item)[0]], {
+          data: can,
+        })
+      }
+      if (dispatchByTable[Object.keys(item)[0]] === 'app/setCanbanOrder') {
+        const ordrData = item[Object.keys(item)[0]]
+        this.$store.dispatch(dispatchByTable[Object.keys(item)[0]], {
+          data: {
+            datetime: getNowSecods(),
+            data: JSON.parse(ordrData[0].ord),
+          },
+        })
+      }
+    },
+    async completeDrag(change: Iobject): Promise<void> {
+      crmApi.sendAndGetData(change)
+        .then((result: Iobject) => {
+          console.log('completeDrag result', result)
+          result.data.forEach((item: Iobject) => {
+            this.resolveCallback(item)
+          })
+          this.defaultAfterDrag()
+        })
+        .catch((error: Iobject) => {
+          console.warn('error completeDrag', error)
+          this.defaultAfterDrag()
+        })
     },
     async initialCanbanAndSortDataAndByStage(load: boolean): Promise<void> {
       if (this.$route.name !== canbanRouteData.name) return
@@ -395,37 +397,40 @@ export default {
       this.isSorting = true
       if (this.error !== null) this.error = null
 
-      const datetime = Math.round(new Date().getTime() / 1000)
+      const datetime = getNowSecods()
       const lastCanbanDataTime = this.getCanbanData?.datetime ?? 0
-      if (load === false || datetime - lastCanbanDataTime < reloadDatetimeInterval) {
+      if (load === false || datetime - lastCanbanDataTime < reloadCanbanInterval) {
         this.sortCanban()
         return
       }
       this.$store.dispatch('app/setLoader', { data: true })
-      crmApi.getCanbanData(this.catId).then((result: Iobject) => {
-        console.log('result', result)
-        this.$store.dispatch('app/setCanbanData', {
-          data: {
-            datetime,
-            data: getUnFlat(result.data.deals),
-          },
+      crmApi.getCanbanData(this.catId)
+        .then((result: Iobject) => {
+          console.log('result', result)
+          this.$store.dispatch('app/setCanbanData', {
+            data: {
+              datetime,
+              data: getUnFlat(result.data.deals),
+            },
+          })
+          this.$store.dispatch('app/setCanbanOrder', {
+            data: {
+              datetime,
+              data: result.data.order,
+            },
+          })
+          this.sortCanban()
         })
-        this.$store.dispatch('app/setCanbanOrder', {
-          data: {
-            datetime,
-            data: result.data.order,
-          },
+        .catch((error: Iobject) => {
+          console.warn('error crmApi.getCanbanData', error)
+          this.error = true
         })
-        this.sortCanban()
-      }).catch((error: Iobject) => {
-        console.warn('error crmApi.getCanbanData', error)
-        this.error = true
-      }).then(() => {
-        setTimeout(() => {
-          this.$store.dispatch('app/setLoader', { data: false })
-          this.isSorting = false
-        }, 50)
-      })
+        .then(() => {
+          setTimeout(() => {
+            this.$store.dispatch('app/setLoader', { data: false })
+            this.isSorting = false
+          }, 50)
+        })
     },
     sortCanban(): void {
       this.error = false
