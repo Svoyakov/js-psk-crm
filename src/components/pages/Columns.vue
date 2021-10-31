@@ -64,7 +64,7 @@
                             <h3>
                                 <span class="deal__contact-id">#{{ item.id }}</span>,
                                 <span class="deal__contact-name"
-                                  v-html="noData(item['company.name'], 'нет названия компании')"
+                                  v-html="noData(item['deal.description'], 'нет описания сделки')"
                                 ></span>
                                 <span  class="deal__contact-phone" v-if="checkPhone(item)">
                                   / {{ item.contacts[0].phones[0].phone }}

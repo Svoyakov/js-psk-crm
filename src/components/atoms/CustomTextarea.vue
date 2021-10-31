@@ -1,28 +1,15 @@
 <template>
-  <div class="custom-input" :disabled="disabled">
-    <input class="--input"
-      v-if="!maskedFields.includes(item)"
+  <div class="custom-textarea" :disabled="disabled">
+    <textarea class="--input" 
       v-model="parent[item]"
       :placeholder="placeholder"
       :disabled="disabled"
       :data-novalid="novalid"
-      :type="type"
       @keyup="$emit('keyup')"
       @blur="$emit('blur')"
-    />
-    <input class="--input"
-      v-if="maskedFields.includes(item)"
-      v-model="parent[item]"
-      v-mask="getMask(item, parent)"
-      :placeholder="placeholder"
-      :disabled="disabled"
-      :data-novalid="novalid"
-      :type="type"
-      @keyup="$emit('keyup')"
-      @blur="$emit('blur')"
-    />
+    ></textarea>
     <div class="--delete"
-      v-if="(parent[item] && String(parent[item]).length > 0) === true"
+      :data-visible="(parent[item] && String(parent[item]).length > 0) === true"
       @click="clickDelete($event)"
     ></div>
   </div>
@@ -35,7 +22,7 @@ interface Iobject {
 }
 
 export default {
-  name: 'CustomInput',
+  name: 'CustomTextarea',
   props: {
     parent: {
       required: true,
@@ -46,9 +33,6 @@ export default {
     disabled: {
       default: false,
     },
-    type: {
-      default: 'text',
-    },
     novalid: {
       default: false,
     },
@@ -58,22 +42,13 @@ export default {
   },
   data() {
     return {
-      maskedFields: ['phone'],
+
     }
   },
   methods: {
-    getMask(item: string, parent: Iobject): string {
-      if (item === 'phone') {
-        const n = parent[item] ? parent[item].match(/\d/g) : ''
-        const m = n ? n.length : 0
-        if (m <= 11) return '+# (###) ###-##-###'
-        if (m > 11) return '##################'
-      }
-      return 'X'.repeat(255)
-    },
     clickDelete(e: Iobject): void {
       this.parent[this.item] = ''
-      e.target.closest('.custom-input').querySelector('.--input').focus()
+      e.target.closest('.custom-textarea').querySelector('.--input').focus()
     },
   },
 } as Iobject
@@ -82,7 +57,7 @@ export default {
 <style lang="scss">
 @import '@/assets/css/variables.scss';
 
-.custom-input {
+.custom-textarea {
     display: inline-block;
     width: 100%;
     border: 1px solid #999;
@@ -97,6 +72,7 @@ export default {
         width: 100%;
         box-sizing: border-box;
         border: 0;
+        font-size: 13px;
         box-shadow: none;
     }
 
@@ -113,6 +89,8 @@ export default {
         width: 23px;
         border-radius: 3px;
         cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.2s;
     }
     .--delete[data-visible] {
         opacity: 1;
@@ -133,7 +111,7 @@ export default {
     }
 }
 
-.custom-input[disabled] {
+.custom-textarea[disabled] {
     opacity: $disabled-opacity;
 }
 </style>

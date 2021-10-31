@@ -8,7 +8,7 @@
           <div class="deal-body__left">
 
             <h1>
-              <span v-html="noData(d['company.name'], 'нет названия компании')"></span>,
+              <span v-html="noData(d['deal.description'], 'нет описания сделки')"></span>,
               <span v-html="noData(d['deal.city'], 'нет города')"></span>
             </h1>
             <p v-html="noData(d['deal.info'], 'нет дополнительного описания')"></p>
@@ -84,9 +84,9 @@
             <br />
             <h3>Контакты</h3>
             <p class="khar">
-              <span class="khar__name">Компания</span>:
+              <span class="khar__name">Описание</span>:
               <span class="khar__prop"
-                v-html="noData(d['company.name'], 'нет названия компании')"
+                v-html="noData(d['deal.description'], 'нет описания сделки')"
               ></span>
             </p>
             <p class="khar"  v-if="d.contacts[0]">

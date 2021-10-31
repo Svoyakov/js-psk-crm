@@ -47,3 +47,7 @@ body .no-data {
     font-family: "roboto-italic";
     color: #999;
 }
+
+textarea, input, select {
+    font-family: "roboto-regular";
+}

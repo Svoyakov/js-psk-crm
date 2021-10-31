@@ -11,6 +11,31 @@ interface Iobject {
     [key: string]: any
 }
 
+export function getInsertRequest(data: Iobject[], table: string): Iobject {
+  const insert: Iobject[] = []
+  data.forEach((da: Iobject, i: number) => {
+    insert[i] = []
+    Object.keys(da).forEach((key: string) => {
+      if (key === 'id') return
+      let d = da[key]
+      d = Array.isArray(d) ? JSON.stringify(d).replace(/null/g, '""') : d
+      insert[i].push({ 
+        name: key,
+        value: d === null ? '' : d, 
+      })
+    })
+  })
+  const actions: Iobject[] = []
+  insert.forEach((i: Iobject) => {
+    actions.push({ table, type: 'insert', items: i })
+  })
+  const insertRequest: Iobject = {
+    actions,
+    datetime: getNowSecods(),
+  }
+  return insertRequest
+}
+
 let resolvePopup: any = null
 export function resolveOpenPopupDialog(status: string | boolean): void {
   resolvePopup(status)

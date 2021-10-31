@@ -2,69 +2,73 @@
     <div id="draggable" v-if="itemParent !== null">
 
         <draggable :list="itemParent[itemName]"
-            class="list-group"
-            :disabled="!enabled.status"
-            handle=".item__handle"
-            @start="setDraggingStatus(true, itemParent[itemName])"
-            @end="setDraggingStatus(false, itemParent[itemName])"
-            v-bind="dragOptions"
+          class="list-group"
+          :disabled="!enabled.status"
+          handle=".item__handle"
+          @start="setDraggingStatus(true, itemParent[itemName])"
+          @end="setDraggingStatus(false, itemParent[itemName])"
+          :move="checkMove"
+          v-bind="dragOptions"
         >
-            <div class="list-group-item" v-for="(el, index) in itemParent[itemName]" :key="index">
-                <div>
-                    <h3>{{ p[itemName] }}</h3>
-                    <span class="item__del" 
-                      :disabled="disabled"
-                      @click="replaceDragItem(itemParent[itemName], index)"
-                    >
-                        &#10006;
-                    </span>
-                    <span class="item__handle"></span>
-                    <div class="items" v-for="(d, i) in cloneAndObjectKeys(el)" :key="d + i">
-                      <div v-if="showedItem(d)">
 
-                        <CustomInput class="items__input"
-                          v-if="!scheme[d] || scheme[d].list === null"
-                          type="text"
-                          :parent="el"
-                          :item="d"
-                          :disabled="getDisabled(mode, d)"
-                          :placeholder="`${p[d]}${scheme[d] && scheme[d].units ? ', ' + scheme[d].units : ''}`"
-                          :novalid="validOb[index][d]"
-                          @keyup="changeDealData(el, validOb[index], d, root, 'keyup')"
-                          @blur="changeDealData(el, validOb[index], d, root)"
-                        />
-                        <CustomSelect v-if="scheme[d] && scheme[d].list !== null"
-                          class="scheme-item__select"
-                          :disabled="getDisabled(mode, d)"
-                          :id="getItemId(d)"
-                          :itemParent="el"
-                          :itemName="d"
-                          :options="scheme[d].list"
-                          :scheme="scheme"
-                          :data-novalid="validOb[index][d]"
-                          :validOb="validOb[index]"
-                          :root="root"
-                          @changeDealData="changeDealData(el, validOb[index], d, root)"
-                        />
+          <div class="list-group-item" v-for="(el, index) in itemParent[itemName]" :key="index">
+            <div>
+              <span class="item__del" 
+                :disabled="disabled"
+                @click="replaceDragItem(itemParent[itemName], index)"
+              >&#10006;</span>
+              <span class="item__handle"></span>
 
-                      </div>
+              <div class="items" v-for="(d, i) in cloneAndObjectKeys(el)" :key="d + i">
+                <div v-if="showedItem(d)">
 
-                      <div v-if="addingInit[d]" class="items__add">
-                          <Draggable
-                            :disabled="getDisabled(mode, d)"
-                            :mode="mode"
-                            :itemParent="el"
-                            :itemName="d"
-                            :scheme="scheme"
-                            :validOb="validOb[index][d]"
-                            :root="root"
-                            @changeDealData="changeDealData"
-                          />
-                      </div>
+                  <CustomInput class="items__input"
+                    v-if="!scheme[d] || scheme[d].list === null"
+                    type="text"
+                    :parent="el"
+                    :item="d"
+                    :disabled="getDisabled(mode, d)"
+                    :placeholder="`${p[d]}${scheme[d] && scheme[d].units ? ', ' + scheme[d].units : ''}`"
+                    :novalid="validOb ? validOb[index][d] : false"
+                    @keyup="$emit('keyup', el, validOb ? validOb[index] : false, d, root, 'keyup')"
+                    @blur="$emit('blur', el, validOb ? validOb[index] : false, d, root, 'blur')"
+                  />
+                  <CustomSelect v-if="scheme[d] && scheme[d].list !== null"
+                    class="scheme-item__select"
+                    :disabled="getDisabled(mode, d)"
+                    :id="getItemId(d)"
+                    :itemParent="el"
+                    :itemName="d"
+                    :options="scheme[d].list"
+                    :scheme="scheme"
+                    :data-novalid="validOb ? validOb[index][d] : false"
+                    :validOb="validOb ? validOb[index] : false"
+                    :root="root"
+                    @change="$emit('change', el, validOb ? validOb[index] : false, d, root)"
+                  />
 
-                    </div>
                 </div>
+ 
+                <div v-if="addingInit[d]" class="items__add">
+                    <Draggable
+                      :disabled="getDisabled(mode, d)"
+                      :mode="mode"
+                      :itemParent="el"
+                      :itemName="d"
+                      :scheme="scheme"
+                      :validOb="validOb ? validOb[index][d] : false"
+                      :root="root"
+                      @change="change_emit"
+                      @keyup="keyup_emit"
+                      @blur="blur_emit"
+                      @addDragItem="addDragItem_emit"
+                      @checkMove="checkMove_emit"
+                    />
+                </div>
+
+              </div>
             </div>
+          </div>
         </draggable>
         <div class="list-group-add">
             <span class="cap"
@@ -103,11 +107,11 @@ export default {
   props: {
     itemParent: { required: true },
     itemName: { required: true },
-    scheme: { required: true },
-    validOb: { required: true },
     root: { required: true },
-    mode: { required: true },
     disabled: { required: true },
+    scheme: { required: true },
+    mode: { default: null },
+    validOb: { default: false },
   },
   data() {
     return {
@@ -139,8 +143,13 @@ export default {
     },
   },
   methods: {
-    changeDealData(...args: any): void {
-      this.$emit('changeDealData', ...args)
+    change_emit(...args: any): void { this.$emit('change', ...args) },
+    keyup_emit(...args: any): void { this.$emit('keyup', ...args) },
+    blur_emit(...args: any): void { this.$emit('blur', ...args) },
+    addDragItem_emit(...args: any): void { this.$emit('addDragItem', ...args) },
+    checkMove_emit(...args: any): void { this.$emit('checkMove', ...args) },
+    checkMove(): void {
+      this.$emit('checkMove', this.root)
     },
     showedItem(d: any) {
       return (d !== 'ord' && d !== 'datetime' && !addingInit[d])
@@ -171,6 +180,8 @@ export default {
       const adding: Iobject = cloneObj(this.adding[d])
       ob.push(adding)
       this.adding = cloneObj(this.addingInit)
+      this.$emit('addDragItem', d)
+      console.log(this.itemParent)
     },
     replaceDragItem(ob: Iobject, index: number): void {
       if (this.disabled === true) return
@@ -198,7 +209,7 @@ export default {
   width: 700px;
 
   &-item {
-    padding: 0 10px 10px 20px;
+    padding: 5px 10px 5px 20px;
     width: 100%;
     position: relative;
     box-sizing: border-box;
@@ -228,7 +239,7 @@ export default {
 
     .item__handle {
         position: absolute;
-        top: 7px;
+        top: 13px;
         left: 5px;
         display: inline-block;
         width: 14px;
@@ -245,12 +256,12 @@ export default {
       padding: 3px;
 
       .select__input-result {
-        padding: 3px;
-        width: 150px;
+        padding: 4px;
+        width: 200px;
       }
 
       &__input {
-          width: 150px;
+          width: 200px;
       }
   }
 
@@ -282,9 +293,8 @@ export default {
     .cap {
       cursor: pointer;
       display: inline-block;
-      padding: 3px 12px;
-      border: 1px dashed #999;
-      border-radius: 20px;
+      padding: 1px;
+      border-bottom: 1px dashed #999;
       font-size: 13px;
     }
 

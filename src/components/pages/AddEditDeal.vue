@@ -1,5 +1,20 @@
 <template>
     <div class="add-deal-wrap">
+
+      <div class="popup" v-show="popup">
+        <span class="popup__close" @click="popup = false">&#10006;</span>
+        <div class="top">
+          <div class="top__item">
+            <h1>Добавить компанию и/или контакты</h1>
+          </div>
+        </div>
+        <AddEditCompanyContacts 
+          type="addPopup"
+          :popup="popup"
+          @stopPopup="stopPopup"
+        />
+      </div>
+
       <div class="add-deal component-root">
         <Header />
 
@@ -13,6 +28,7 @@
 
         <div class="scheme-wrap" v-show="error === false && mode !== null">
           <div class="scheme" v-if="defaultDeal !== null || scheme !== null">
+            
             <div v-for="(item, i) in Object.keys(defaultDeal)" :key="item + i">
 
               <div v-if="scheme[item] && !addingInit[item]" class="scheme-item">
@@ -21,7 +37,7 @@
                 ></span>
 
                 <CustomInput class="scheme-item__input"
-                  v-if="scheme[item].list === null"
+                  v-if="getFieldType(item) === 'input'"
                   :parent="defaultDeal"
                   :item="item"
                   :disabled="getDisabled(mode, item)"
@@ -30,8 +46,20 @@
                   @keyup="changeDealData(defaultDeal, validOb, item, item, 'keyup')"
                   @blur="changeDealData(defaultDeal, validOb, item, item)"
                 />
-                <CustomSelect v-if="scheme[item].list !== null"
-                  class="scheme-item__select"
+
+                <CustomTextarea class="scheme-item__input"
+                  v-if="getFieldType(item) === 'textarea'"
+                  :parent="defaultDeal"
+                  :item="item"
+                  :disabled="getDisabled(mode, item)"
+                  :type="scheme[item].type"
+                  :novalid="validOb[item]"
+                  @keyup="changeDealData(defaultDeal, validOb, item, item, 'keyup')"
+                  @blur="changeDealData(defaultDeal, validOb, item, item)"
+                />
+
+                <CustomSelect class="scheme-item__select"
+                  v-if="getFieldType(item) === 'select'"
                   :disabled="getDisabled(mode, item)"
                   :id="getItemId(item)"
                   :itemParent="defaultDeal"
@@ -41,11 +69,11 @@
                   :data-novalid="validOb[item]"
                   :validOb="validOb"
                   :root="item"
-                  @changeDealData="changeDealData"
+                  @change="changeDealData"
                 />
               </div>
 
-              <div v-if="scheme[item] && addingInit[item]" class="scheme-item">
+              <div class="scheme-item" v-if="getFieldType(item) === 'drag'">
                 <span class="scheme-item__name" v-html="scheme[item].name"></span>
                 <Draggable class="scheme-item__drag"
                   :disabled="getDisabled(mode, item)"
@@ -53,9 +81,13 @@
                   :itemParent="defaultDeal"
                   :itemName="item"
                   :scheme="scheme"
-                  :validOb="validOb[item]"
                   :root="item"
-                  @changeDealData="changeDealData"
+                  :validOb="validOb[item]"
+                  @change="changeDealData"
+                  @keyup="changeDealData"
+                  @blur="changeDealData"
+                  @addDragItem="loadCompanyContacts"
+                  @checkMove="checkDragMove"
                 />
               </div>
 
@@ -68,6 +100,10 @@
               :data-disabled="!valid.status"
               v-text="saveButton.text"
               @click="clickSaveDeal(defaultDeal, validOb)"
+            />
+            <button class="buttons__button"
+              v-text="'Новая компания или контакт'"
+              @click="popup = true"
             />
           </div>
           <br /><br /><br /><br />
@@ -85,8 +121,12 @@ import {
 import { defaultDeal, dealItemNames } from '@/conf/deals/defaultDeal'
 import routerAddEditDeal from '@/conf/routes/pages/addEditDeal'
 import { cloneObj, getNowSecods } from '@/utils'
-import { validItem } from '@/conf/deals/validation'
-import { getUsers, openPopupDialog, getCanbanDeal } from '@/store/plugins/generalFunctions'
+import { 
+  getUsers,
+  openPopupDialog,
+  getCanbanDeal,
+  getInsertRequest,
+} from '@/store/plugins/generalFunctions'
 import { tables } from '@/conf/tables'
 import { getHistoryReqToTable, getUnFlat } from '@/store/plugins/canban/functions'
 
@@ -97,6 +137,8 @@ import Footer from '@/components/Footer.vue'
 import Draggable from '@/components/atoms/Draggable.vue'
 import CustomSelect from '@/components/atoms/CustomSelect.vue'
 import CustomInput from '@/components/atoms/CustomInput.vue'
+import CustomTextarea from '@/components/atoms/CustomTextarea.vue'
+import AddEditCompanyContacts from '@/components/pages/AddEditCompanyContacts.vue'
 
 const crmApi = new CrmApi()
 
@@ -113,6 +155,8 @@ export default {
     Draggable,
     CustomSelect,
     CustomInput,
+    AddEditCompanyContacts,
+    CustomTextarea,
   },
   data(): Iobject {
     return {
@@ -122,7 +166,7 @@ export default {
       addingInit,
       inputTimeout: null,
       inputTimer: {
-        keyup: 500,
+        keyup: 2000,
         blur: 0,
       },
       valid: { status: false },
@@ -138,9 +182,21 @@ export default {
         timeout: null,
         timer: 3000,
       },
+      popup: false,
+      loadData: {
+        'company.contacts': {
+          table: tables.company,
+          scheme: 'addCompany',
+        },
+        contacts: {
+          table: tables.contacts,
+          scheme: 'addContacts',
+        },
+      },
     }
   },
   mounted(): void {
+    this.popup = false
     this.dealId = null
     this.saveButton.text = this.saveButton.default
     this.changes = []
@@ -148,7 +204,13 @@ export default {
     this.error = null
     this.allInvalid = false
   },
+  beforeDestroy() {
+    document.body.style.overflow = ''
+  },
   watch: {
+    popup(val: boolean): void {
+      document.body.style.overflow = val === true ? 'hidden' : ''
+    },
     getRouteData(): void {
       if (this.getUser === null) this.routeGo({ name: 'auth' })
       if (this.$route.name === routerAddEditDeal[0].name) {
@@ -174,21 +236,6 @@ export default {
     },
   },
   methods: {
-    validation(d: Iobject, valid: Iobject, allInvalid: boolean): void {
-      Object.keys(d).forEach((key: string) => {
-        if (Array.isArray(d[key])) {
-          d[key].forEach((a: Iobject) => {
-            this.validation(a, valid, allInvalid)
-          })
-        } else {
-          const r = this.scheme[key] ? d[key] : true
-          d[key] = validItem(d, this.scheme, key, allInvalid)
-          if (d[key] === true || (r === null && allInvalid === false)) {
-            if (valid.status !== false) valid.status = false
-          }
-        }
-      })
-    },
     saveError(alert: Iobject): void {
       if (this.saveButton.timeout) clearTimeout(this.saveButton.timeout)
       this.saveButton.text = alert
@@ -281,30 +328,11 @@ export default {
     },
     async addDeal(): Promise<void> {
       console.log('clickSaveDeal', this.defaultDeal)
+      const insertRequest = getInsertRequest([this.defaultDeal], tables.canbanData)
       this.$store.dispatch('app/setLoader', { data: true })
-      const insert: Iobject[] = []
-      Object.keys(this.defaultDeal).forEach((key: string) => {
-        let d = this.defaultDeal[key]
-        d = Array.isArray(d) ? JSON.stringify(d).replace(/null/g, '""') : d
-        insert.push({ 
-          name: key,
-          value: d === null ? '' : d, 
-        })
-      })
-      const insertRequest: Iobject = {
-        actions: [
-          {
-            table: tables.canbanData,
-            type: 'insert',
-            items: insert,
-          },
-        ],
-        datetime: getNowSecods(),
-      }
-      console.log('insert request', insertRequest)
       crmApi.sendAndGetData(insertRequest)
         .then((result: Iobject) => {
-          console.log('insert result', result)
+          console.log('insert canbanDeal result', result)
           try {
             const id = result.inserted[0][tables.canbanData]
             this.routeGo({ name: 'canbanDeal', params: { id } })
@@ -324,7 +352,7 @@ export default {
     changeDealData(deal: Iobject, validOb: Iobject, item: string | null = null, root: string, e = 'blur'): void {
       if (root !== undefined && this.changes.includes(root) === false) this.changes.push(root)
       if (this.inputTimeout) clearTimeout(this.inputTimeout)
-      this.inputTimeout = setTimeout(() => {     
+      this.inputTimeout = setTimeout(() => {
         if (!item) return
         if (this.scheme[item] && this.scheme[item].type === 'text') {
           if (e === 'blur' && deal[item] === null) deal[item] = ''
@@ -359,6 +387,7 @@ export default {
             }
           })
           this.error = false
+          this.loadCompanyContacts('company.contacts')
         })
         .catch((error: Error) => {
           console.warn('error initialEditDeal', JSON.stringify(error))
@@ -389,7 +418,71 @@ export default {
           this.$store.dispatch('app/setLoader', { data: false })
         })
     },
+    stopPopup(): void {
+      this.popup = false
+      this.scheme[this.loadData['company.contacts'].scheme].list = []
+      this.loadCompanyContacts('company.contacts')
+    },
+    async getComanyContacts(table: string, company: Iobject): Promise<Iobject> {
+      const request: Iobject = { 
+        datetime: getNowSecods(), 
+        callbacks: [{ table, order: 'id', desc: 'desc' }],
+      }
+      return crmApi.sendAndGetData(request).then((result: Iobject) => {
+        try {
+          const r: Iobject = []
+          result.data[0][table].forEach((i: Iobject) => {
+            if (table === 'company') {
+              r.push({ name: `${i.companyType} ${i.companyName}`.trim(), value: i.id })
+            }
+            if (table === 'contacts') {
+              const c = company[i.company] ? `, ${company[i.company]}` : ''
+              r.push({ name: `${i.firstName} ${i.lastName}${c}`.trim(), value: i.id })
+            }
+          })
+          return r
+        } catch (error) {
+          throw new Error(JSON.stringify(error))
+        }
+      }).catch((error: string) => {
+        throw new Error(error)
+      })
+    },
+    loadCompanyContacts(...args: any): void {
+      if (this.loadData[args[0]]) {
+        const f = this.loadData[args[0]]
+        if (this.scheme[f.scheme].list.length === 0) {
+          this.$store.dispatch('app/setLoader', { data: true })
 
+          let { table } = this.loadData['company.contacts']
+          this.getComanyContacts(table, {}).then((result: Iobject) => {
+            const companiesById: Iobject = {}
+            result.forEach((r: Iobject) => { companiesById[r.value] = r.name })
+            this.scheme[this.loadData['company.contacts'].scheme].list = result
+            table = this.loadData.contacts.table
+            return this.getComanyContacts(table, companiesById)
+          }).then((result: Iobject) => {
+            this.scheme[this.loadData.contacts.scheme].list = result
+          }).catch((error: Error) => {
+            console.warn('error ', f.scheme, f.table, error)
+          })
+            .then(() => {
+              this.$store.dispatch('app/setLoader', { data: false })
+            })
+        }
+      }
+    },
+    checkDragMove(...args: any): void {
+      this.changes.push(args[0])
+    },
+    getFieldType(item: string): string {
+      if (!this.scheme[item]) return ''
+      if (this.scheme[item] && this.addingInit[item]) return 'drag'
+      if (this.scheme[item].list !== null) return 'select' 
+      if (this.scheme[item].list === null && this.scheme[item].type !== 'textarea') return 'input'
+      if (this.scheme[item].list === null && this.scheme[item].type === 'textarea') return 'textarea'
+      return 'input'
+    },
   },
 } as Iobject
 </script>
@@ -452,6 +545,13 @@ export default {
 
 .buttons {
   padding-left: 250px;
+}
+
+.popup {
+  padding: 20px;
+  z-index: 50;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(7px);
 }
 
 </style>

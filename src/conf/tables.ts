@@ -9,6 +9,8 @@ const tables: Iobject = {
   canbanData: `${tablePrefix}canbanDeals`,
   canbanHistory: `${tablePrefix}canbanHistory`,
   users: `${tablePrefix}users`,
+  company: `${tablePrefix}company`,
+  contacts: `${tablePrefix}contacts`,
 }
 
 const dispatchByTable: Iobject = {
@@ -25,6 +27,10 @@ const jsonParseKeys: Iobject = {
   'deal.additions.gates': true,
   'deal.additions.cranes': true,
   'company.contacts': true,
+  phones: true,
+  emails: true,
+  messengers: true,
+  sites: true,
 }
 
 export { tables, dispatchByTable, jsonParseKeys }

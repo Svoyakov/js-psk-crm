@@ -5,8 +5,8 @@ interface Iobject {
 }
 
 export const defaultDeal: Iobject = {
-  'company.name': null,
   'deal.name': null,
+  'deal.description': null,
   'deal.purpose': null,
   'deal.roof': null,
   'deal.size.l': null,
@@ -38,8 +38,8 @@ export const defaultDeal: Iobject = {
 }
 
 export const dealItemNames: Iobject = {
-  'company.name': 'Название компании',
   'deal.name': 'Название сделки',
+  'deal.description': 'Описание сделки',
   'deal.purpose': 'Тип здания',
   'deal.roof': 'Тип крыши',
   'deal.size.l': 'Длина здания',

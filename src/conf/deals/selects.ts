@@ -83,3 +83,7 @@ export const statuses: Iobject = [
   { name: 'Статус 2', value: 1 },
   { name: 'Статус 3', value: 2 },
 ]
+
+export const addCompany: Iobject = []
+
+export const addContacts: Iobject = []

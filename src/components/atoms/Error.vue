@@ -11,7 +11,12 @@
 </template>
 
 <script lang="ts">
+
+interface Iobject {
+  [key: string]: any
+}
+
 export default {
   name: 'Error',
-}
+} as Iobject
 </script>

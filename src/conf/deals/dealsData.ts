@@ -10,6 +10,8 @@ import {
   gateTypes,
   craneWeights,
   statuses,
+  addCompany,
+  addContacts,
 } from '@/conf/deals/selects'
 
 interface Iobject {
@@ -23,15 +25,15 @@ export const topics: Iobject = [
 export const canbanDataScheme: Iobject = {
 
   // Корневые характеристики
-  'company.name': {
-    item: 'company.name',
-    name: 'Название компании',
+  'deal.description': {
+    item: 'deal.description',
+    name: 'Описание сделки',
     disabled: {
       change: {
         stage: [0, 1, 2, 3, 4, 5, 6, 7],
       },
     },
-    type: 'text',
+    type: 'textarea',
     'min-length': 3,
     'max-length': 255,
     simbols: 'all',
@@ -229,7 +231,7 @@ export const canbanDataScheme: Iobject = {
   // Корневые характеристики с массивами данных внутри
   'company.contacts': {
     item: 'company.contacts',
-    name: 'Контакты компании',
+    name: 'Компания',
     changeStage: [0, 1, 2, 3, 4, 5, 6, 7],
     type: 'array',
   },
@@ -453,6 +455,23 @@ export const canbanDataScheme: Iobject = {
     list: craneWeights,
     units: '',
   },
+
+  addCompany: {
+    item: 'addCompany',
+    name: 'Компания',
+    changeStage: [0, 1, 2, 3, 4, 5, 6, 7],
+    type: 'select',
+    list: addCompany,
+    placeholder: 'Выберите компанию',
+  },
+  addContacts: {
+    item: 'addContacts',
+    name: 'Контакт',
+    changeStage: [0, 1, 2, 3, 4, 5, 6, 7],
+    type: 'select',
+    list: addContacts,
+    placeholder: 'Выберите контакт',
+  },
 }
 
 export const phrases: Iobject = {
@@ -485,7 +504,9 @@ export const phrases: Iobject = {
   craneWeight: 'Грузоподъемность',
 
   contacts: 'Контакт',
-  'company.contacts': 'Контакт компании',
+  company: 'Компанию',
+  'company.contacts': 'Компанию',
+
   'deal.additions.windows': 'Окно',
   'deal.additions.doors': 'Дверь',
   'deal.additions.gates': 'Ворота',
@@ -501,31 +522,23 @@ export const phrases: Iobject = {
   site: 'Сайт',
   info: 'Информация',
   messenger: 'Месенджер',
+  addContacts: 'Контакт',
+  addCompany: 'Компания',
 }
 
 export const addingInit: Iobject = {
-  contacts: {
-    firstName: null,
-    middleName: null,
-    lastName: null,
-    positionContact: null,
-    datetime: null,
-    infoContact: null,
-    statusContact: null,
-    phones: [],
-    emails: [],
-    messengers: [],
-  },
+  contacts: { addContacts: null },
   phones: { phone: null, info: null },
   emails: { email: null, info: null },
   sites: { site: null, info: null },
   messengers: { messenger: null, info: null },
-  'company.contacts': {
-    contactName: null,
-    phones: [],
-    emails: [],
-    sites: [],
-  },
+  'company.contacts': { addCompany: null },
+  // company: {
+  //   contactName: null,
+  //   phones: [],
+  //   emails: [],
+  //   sites: [],
+  // },
   'deal.additions.windows': {
     windowName: null,
     windowW: null,

@@ -7,7 +7,10 @@
         :disabled="disabled"
     >
         <div class="select" :data-before="before">
-            <div class="select__input-result" @click="open()" :title="realValue">
+            <div class="select__input-result" 
+              @click="open()"
+              :title="realValueStrip"
+            >
               <p v-html="realValue"></p>
             </div>
             <div class="select__input-body" v-if="opened">
@@ -76,7 +79,7 @@ export default {
       required: true,
     },
     validOb: {
-      required: true,
+      default: false,
     },
     disabled: {
       default: false,
@@ -160,11 +163,19 @@ export default {
     },
   },
   computed: {
+    realValueStrip(): string {
+      return typeof this.realValue === 'string' 
+        ? this.realValue.replace(/<\/?[^>]+(>|$)/g, '')
+        : false
+    },
     realValue(): string {
       try {
         return this.options
           .filter((o: Iobject) => o.value === this.itemParent[this.itemName])[0].name || null
       } catch (err) {
+        if (this.scheme[this.itemName] && this.scheme[this.itemName].placeholder) {
+          return this.scheme[this.itemName].placeholder
+        }
         if (this.itemParent[this.itemName]) return this.itemParent[this.itemName]
         return `<span class='--placeholder'>${this.placeholder}</span>`
       }
@@ -208,7 +219,7 @@ export default {
       this.onBlur()
       this.defaultInstance()
       this.defaultSelect()
-      this.$emit('changeDealData', this.itemParent, this.validOb, this.itemName, this.root)
+      this.$emit('change', this.itemParent, this.validOb, this.itemName, this.root)
     },
     documentClick(e: Iobject): void {
       if (this.opened === false) return
@@ -273,7 +284,7 @@ export default {
         font-size: 13px;
         line-height: 20px;
         position: relative;
-        padding: 5px;
+        padding: 4px;
         white-space: nowrap;
 
         p {

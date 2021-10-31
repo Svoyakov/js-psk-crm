@@ -1,5 +1,6 @@
 import { mapGetters } from 'vuex'
 import { numberWithSpaces } from '@/utils'
+import { validItem } from '@/conf/deals/validation'
 
 interface Iobject {
     [key: string]: any
@@ -30,7 +31,23 @@ export default {
     ]),
   },
   methods: {
+    validation(d: Iobject, valid: Iobject, allInvalid: boolean): void {
+      Object.keys(d).forEach((key: string) => {
+        if (Array.isArray(d[key])) {
+          d[key].forEach((a: Iobject) => {
+            this.validation(a, valid, allInvalid)
+          })
+        } else {
+          const r = this.scheme[key] ? d[key] : true
+          d[key] = validItem(d, this.scheme, key, allInvalid)
+          if (d[key] === true || (r === null && allInvalid === false)) {
+            if (valid.status !== false) valid.status = false
+          }
+        }
+      })
+    },
     getDisabled(mode: string, item: string): boolean {
+      if (mode || item) return false
       return false
     },
     getItemId(id: string): string {
